@@ -1,0 +1,10 @@
+**/.env.*
+!.env.example
+
+**/*.log
+
+node_modules/
+
+dist/
+config/
+apitest/

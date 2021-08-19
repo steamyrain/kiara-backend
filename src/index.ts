@@ -47,9 +47,39 @@ app.use(someMiddleware);
 app.get(
   "/kegiatan",
   wrap(async (_req: express.Request, res: express.Response) => {
-    res
-      .status(h2Status.HTTP_STATUS_OK)
-      .send("Hello world! this is kegiatan get path~");
+    await pool.getConnection().then(async (conn: mariadb.PoolConnection) => {
+      await conn
+        .query(
+          "SELECT KegiatanId, TanggalWaktuAwal, TanggalWaktuAkhir, Uraian, Lokasi, Keterangan from alkal_kegiatan_harian"
+        )
+        .then((rows: any) => {
+          const kegiatans = plainToClass(KegiatanEntity, rows);
+          res.status(h2Status.HTTP_STATUS_OK).json(kegiatans);
+        });
+    });
+  })
+);
+
+app.get(
+  "/kegiatan/:kegiatanId",
+  wrap(async (req: express.Request, res: express.Response) => {
+    await pool
+      .getConnection()
+      .then(async (conn: mariadb.PoolConnection) => {
+        await conn
+          .query(
+            "SELECT KegiatanId, TanggalWaktuAwal, TanggalWaktuAkhir, Uraian, Lokasi, Keterangan from alkal_kegiatan_harian where KegiatanId = ?",
+            req.params.kegiatanId!
+          )
+          .then((rows: any) => {
+            const kegiatans = plainToClass(KegiatanEntity, rows);
+            res.status(h2Status.HTTP_STATUS_OK).json(kegiatans);
+          });
+      })
+      .catch((err) => {
+        console.error(err);
+        res.sendStatus(h2Status.HTTP_STATUS_INTERNAL_SERVER_ERROR);
+      });
   })
 );
 
@@ -91,7 +121,7 @@ app.post(
             )
             .then(() => {
               conn.end();
-              res.sendStatus(h2Status.HTTP_STATUS_OK);
+              res.sendStatus(h2Status.HTTP_STATUS_CREATED);
             })
             .catch((err: any) => {
               conn.end();
@@ -99,10 +129,60 @@ app.post(
             });
         })
         .catch((err: any) => {
-          next(err);
+          res.sendStatus(h2Status.HTTP_STATUS_INTERNAL_SERVER_ERROR)
         });
     }
   )
+);
+
+app.put(
+  "/kegiatan/:kegiatanId",
+  async (req: KailaRequest, res: KailaResponse, next: express.NextFunction) => {
+    const kegiatan = plainToClass(KegiatanEntity, req.body);
+    await validateOrReject(kegiatan).then(
+      () => {
+        res.locals.kegiatan = kegiatan;
+        next();
+      },
+      (errors) => {
+        console.log(errors);
+        res.sendStatus(h2Status.HTTP_STATUS_BAD_REQUEST);
+      }
+    );
+  },
+  wrap(async (req: KailaRequest, res: express.Response) => {
+    const kegiatan: KegiatanEntity = res.locals.kegiatan;
+    await pool
+      .getConnection()
+      .then(async (conn: mariadb.PoolConnection) => {
+        await conn
+          .query(
+            "UPDATE alkal_kegiatan_harian SET TanggalWaktuAwal=?, TanggalWaktuAkhir=?, Uraian=?, Lokasi=?, Keterangan=? WHERE KegiatanId=?",
+            [
+              kegiatan.TanggalWaktuAwal.toSQL({ includeOffset: false }),
+              kegiatan.TanggalWaktuAkhir.toSQL({ includeOffset: false }),
+              kegiatan.Uraian,
+              kegiatan.Lokasi,
+              kegiatan.Keterangan,
+              req.params.kegiatanId!,
+            ]
+          )
+          .then(
+            () => {
+              conn.end()
+              res.sendStatus(h2Status.HTTP_STATUS_OK);
+            },
+            (err) => {
+              conn.end()
+              console.error(err);
+              res.sendStatus(h2Status.HTTP_STATUS_NO_CONTENT);
+            }
+          );
+      })
+      .catch((err) => {
+        res.sendStatus(h2Status.HTTP_STATUS_INTERNAL_SERVER_ERROR);
+      });
+  })
 );
 
 app.listen(parseInt(process.env.SERVER_PORT!), () => {

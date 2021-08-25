@@ -11,6 +11,7 @@ import path from "path";
 import createPool from "./persistences/MariaDB/Connection";
 import wrap from "express-async-wrap";
 import mariadb from "mariadb";
+import cors from "cors";
 
 type ExpressMiddleware<T> = (
   req: express.Request,
@@ -41,6 +42,7 @@ const pool = createPool();
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 app.use(someMiddleware);
 
@@ -129,7 +131,7 @@ app.post(
             });
         })
         .catch((err: any) => {
-          res.sendStatus(h2Status.HTTP_STATUS_INTERNAL_SERVER_ERROR)
+          res.sendStatus(h2Status.HTTP_STATUS_INTERNAL_SERVER_ERROR);
         });
     }
   )
@@ -169,11 +171,11 @@ app.put(
           )
           .then(
             () => {
-              conn.end()
+              conn.end();
               res.sendStatus(h2Status.HTTP_STATUS_OK);
             },
             (err) => {
-              conn.end()
+              conn.end();
               console.error(err);
               res.sendStatus(h2Status.HTTP_STATUS_NO_CONTENT);
             }

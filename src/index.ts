@@ -12,6 +12,7 @@ import createPool from "./persistences/MariaDB/Connection";
 import wrap from "express-async-wrap";
 import mariadb from "mariadb";
 import cors from "cors";
+import KegiatanHarianPDF from "./pdf/KegiatanHarianPDF";
 
 type ExpressMiddleware<T> = (
   req: express.Request,
@@ -55,6 +56,7 @@ app.get(
           "SELECT KegiatanId, TanggalWaktuAwal, TanggalWaktuAkhir, Uraian, Lokasi, Keterangan from alkal_kegiatan_harian"
         )
         .then((rows: any) => {
+          conn.end();
           const kegiatans = plainToClass(KegiatanEntity, rows);
           res.status(h2Status.HTTP_STATUS_OK).json(kegiatans);
         });
@@ -74,6 +76,7 @@ app.get(
             req.params.kegiatanId!
           )
           .then((rows: any) => {
+            conn.end();
             const kegiatans = plainToClass(KegiatanEntity, rows);
             res.status(h2Status.HTTP_STATUS_OK).json(kegiatans);
           });
@@ -184,6 +187,22 @@ app.put(
       .catch((err) => {
         res.sendStatus(h2Status.HTTP_STATUS_INTERNAL_SERVER_ERROR);
       });
+  })
+);
+
+app.get(
+  "/kegiatan/testprint",
+  wrap(async (_req: express.Request, res: express.Response) => {
+    const filename = "test.pdf";
+    const stream = res.writeHead(200, {
+      "Content-Type": "application/pdf",
+      "Content-disposition": `attachment;filename=${filename}.pdf`,
+    });
+    const onData = (chunk: any) => {
+      stream.write(chunk);
+    };
+    const onEnd = () => stream.end();
+    KegiatanHarianPDF(onData, onEnd);
   })
 );
 

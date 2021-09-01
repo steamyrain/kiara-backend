@@ -26,6 +26,7 @@
     "express-async-wrap": "^1.0.0",
     "luxon": "^2.0.2",
     "mariadb": "^2.5.4",
+    "pdfkit": "^0.12.3",
     "reflect-metadata": "^0.1.13",
     "sequelize": "^6.6.5"
   },
@@ -36,6 +37,7 @@
     "@types/express-async-wrap": "^1.0.0",
     "@types/luxon": "^2.0.0",
     "@types/node": "^16.4.12",
+    "@types/pdfkit": "^0.11.2",
     "nodemon": "^2.0.12",
     "prettier": "^2.3.2",
     "ts-node": "^10.1.0",

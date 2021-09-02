@@ -7,7 +7,10 @@ const KegiatanHarianPDF = (
   const doc = new PDFDocument({ bufferPages: true });
   doc.on("data", onData);
   doc.on("end", onEnd);
-  doc.font("Times-Roman").fontSize(12).text("Hello World");
+  doc
+    .font("Times-Bold")
+    .fontSize(10)
+    .text("LAPORAN KEGIATAN HARIAN", { align: "center" });
   doc.end();
 };
 

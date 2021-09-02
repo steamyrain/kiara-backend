@@ -191,9 +191,16 @@ app.put(
 );
 
 app.get(
-  "/kegiatan/testprint",
-  wrap(async (_req: express.Request, res: express.Response) => {
-    const filename = "test.pdf";
+  "/kegiatan/:kegiatanId/print",
+  wrap(async (req: express.Request, res: express.Response) => {
+    const conn = await pool.getConnection();
+    const row = await conn.query(
+      "SELECT KegiatanId, TanggalWaktuAwal, TanggalWaktuAkhir, Uraian, Lokasi, Keterangan from alkal_kegiatan_harian where KegiatanId = ?",
+      req.params.kegiatanId!
+    );
+    conn.end();
+    const kegiatan: KegiatanEntity[] = plainToClass(KegiatanEntity, row);
+    const filename = "test";
     const stream = res.writeHead(200, {
       "Content-Type": "application/pdf",
       "Content-disposition": `attachment;filename=${filename}.pdf`,

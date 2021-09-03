@@ -13,6 +13,7 @@ import wrap from "express-async-wrap";
 import mariadb from "mariadb";
 import cors from "cors";
 import KegiatanHarianPDF from "./pdf/KegiatanHarianPDF";
+import PDFDocument from "pdfkit";
 
 type ExpressMiddleware<T> = (
   req: express.Request,
@@ -203,13 +204,11 @@ app.get(
     const filename = "test";
     const stream = res.writeHead(200, {
       "Content-Type": "application/pdf",
-      "Content-disposition": `attachment;filename=${filename}.pdf`,
+      "Content-Disposition": `attachment;filename=test.pdf`,
     });
-    const onData = (chunk: any) => {
-      stream.write(chunk);
-    };
-    const onEnd = () => stream.end();
-    KegiatanHarianPDF(onData, onEnd);
+    const onData =  (chunk: any[])=>stream.write(chunk);
+    const onEnd = ()=>stream.end();
+    KegiatanHarianPDF(onData,onEnd,kegiatan);
   })
 );
 

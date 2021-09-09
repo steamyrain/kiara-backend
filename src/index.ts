@@ -14,6 +14,9 @@ import mariadb from "mariadb";
 import cors from "cors";
 import KegiatanHarianPDF from "./pdf/KegiatanHarianPDF";
 import PDFDocument from "pdfkit";
+import TenagaKerjaEntity, {
+  TenagaKerjaEntities,
+} from "./entities/TenagaKerjaEntity";
 
 type ExpressMiddleware<T> = (
   req: express.Request,
@@ -65,6 +68,17 @@ app.get(
   })
 );
 
+interface KegiatanQueryOutputPort {
+  KegiatanId: string;
+  TanggalWaktuAwal: string;
+  TanggalWaktuAkhir: string;
+  Uraian: string;
+  Lokasi: string;
+  Keterangan: string;
+  JobName: string;
+  Jumlah: string;
+}
+
 app.get(
   "/kegiatan/:kegiatanId",
   wrap(async (req: express.Request, res: express.Response) => {
@@ -73,13 +87,31 @@ app.get(
       .then(async (conn: mariadb.PoolConnection) => {
         await conn
           .query(
-            "SELECT KegiatanId, TanggalWaktuAwal, TanggalWaktuAkhir, Uraian, Lokasi, Keterangan from alkal_kegiatan_harian where KegiatanId = ?",
+            "SELECT k.KegiatanId as KegiatanId, TanggalWaktuAwal, TanggalWaktuAkhir, Uraian, Lokasi, Keterangan, JobName, Jumlah from alkal_kegiatan_harian as k left join alkal_kegiatan_harian_tk as ktk on k.KegiatanId = ktk.KegiatanId where k.KegiatanId = ?",
             req.params.kegiatanId!
           )
-          .then((rows: any) => {
+          .then((rows: KegiatanQueryOutputPort[]) => {
             conn.end();
-            const kegiatans = plainToClass(KegiatanEntity, rows);
-            res.status(h2Status.HTTP_STATUS_OK).json(kegiatans);
+            let joinedRows: KegiatanEntity;
+            if (rows!.length > 0) {
+              let tenagaKerjaRaw: TenagaKerjaEntities = [];
+              rows[0].TanggalWaktuAkhir
+              joinedRows = plainToClass(KegiatanEntity, rows[0], {
+                excludeExtraneousValues: false,
+              });
+              rows.forEach((row) => {
+                let buffer = plainToClass(TenagaKerjaEntity, {
+                  kerja: row.JobName,
+                  Jumlah: row.Jumlah,
+                });
+                tenagaKerjaRaw.push(buffer);
+              });
+              joinedRows.TenagaKerjas = tenagaKerjaRaw;
+              res.status(h2Status.HTTP_STATUS_OK).json(joinedRows);
+            } else {
+              const kegiatans = plainToClass(KegiatanEntity, rows);
+              res.status(h2Status.HTTP_STATUS_OK).json(kegiatans);
+            }
           });
       })
       .catch((err) => {
@@ -206,9 +238,30 @@ app.get(
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment;filename=test.pdf`,
     });
-    const onData =  (chunk: any[])=>stream.write(chunk);
-    const onEnd = ()=>stream.end();
-    KegiatanHarianPDF(onData,onEnd,kegiatan);
+    const onData = (chunk: any[]) => stream.write(chunk);
+    const onEnd = () => stream.end();
+    KegiatanHarianPDF(onData, onEnd, kegiatan);
+  })
+);
+
+app.get(
+  "/tenagakerja/jenis",
+  wrap(async (_req: express.Request, res: express.Response) => {
+    try {
+      const conn = await pool.getConnection();
+      const rows = await conn.query("SELECT id, kerja FROM job where id <> 5"); // id 5 reserved for admin
+      conn.end();
+      const tenagaKerjas: TenagaKerjaEntities = plainToClass(
+        TenagaKerjaEntity,
+        rows,
+        { excludeExtraneousValues: true }
+      );
+      console.log(tenagaKerjas);
+      res.status(h2Status.HTTP_STATUS_OK).json(tenagaKerjas);
+    } catch (error) {
+      console.error(error);
+      res.sendStatus(h2Status.HTTP_STATUS_INTERNAL_SERVER_ERROR);
+    }
   })
 );
 

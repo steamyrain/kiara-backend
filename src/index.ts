@@ -79,6 +79,17 @@ app.get(
   })
 );
 
+interface KegiatanQueryOutputPort {
+  KegiatanId: string;
+  TanggalWaktuAwal: string;
+  TanggalWaktuAkhir: string;
+  Uraian: string;
+  Lokasi: string;
+  Keterangan: string;
+  JobName: string;
+  Jumlah: string;
+}
+
 app.get(
   "/kegiatan/:kegiatanId",
   wrap(async (req: express.Request, res: express.Response) => {
@@ -95,9 +106,15 @@ app.get(
             let joinedRows: KegiatanEntity;
             if (rows!.length > 0) {
               let tenagaKerjaRaw: TenagaKerjaEntities = [];
+<<<<<<< HEAD
               rows[0].TanggalWaktuAkhir;
               joinedRows = plainToClass(KegiatanEntity, rows[0], {
                 excludeExtraneousValues: true,
+=======
+              rows[0].TanggalWaktuAkhir
+              joinedRows = plainToClass(KegiatanEntity, rows[0], {
+                excludeExtraneousValues: false,
+>>>>>>> d1c79f8307851972a3a518e4d8c7c1e1665755ff
               });
               rows.forEach((row) => {
                 let buffer = plainToClass(TenagaKerjaEntity, {

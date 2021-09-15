@@ -79,6 +79,17 @@ app.get(
   })
 );
 
+interface KegiatanQueryOutputPort {
+  KegiatanId: string;
+  TanggalWaktuAwal: string;
+  TanggalWaktuAkhir: string;
+  Uraian: string;
+  Lokasi: string;
+  Keterangan: string;
+  JobName: string;
+  Jumlah: string;
+}
+
 app.get(
   "/kegiatan/:kegiatanId",
   wrap(async (req: express.Request, res: express.Response) => {

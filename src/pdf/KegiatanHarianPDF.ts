@@ -30,10 +30,15 @@ const KegiatanHarianPDF = (
   doc
     .font("Times-Roman")
     .fontSize(10)
-    .text(`Keterangan : ${kegiatan.Keterangan}`);
-  kegiatan.TenagaKerjas.forEach((tk: TenagaKerjaEntity) => {
-    doc.font("Times-Roman").fontSize(10).text(`${tk.Jenis}: ${tk.Jumlah}`);
-  });
+    .text(
+      `Keterangan : ${kegiatan.Keterangan !== null ? kegiatan.Keterangan : "-"}`
+    );
+  console.log(kegiatan.TenagaKerjas);
+  kegiatan.TenagaKerjas !== null
+    ? kegiatan.TenagaKerjas.forEach((tk: TenagaKerjaEntity) => {
+        doc.font("Times-Roman").fontSize(10).text(`${tk.Jenis}: ${tk.Jumlah}`);
+      })
+    : doc.font("Times-Roman").fontSize(10).text("Tenaga Kerja: -");
   doc.end();
 };
 

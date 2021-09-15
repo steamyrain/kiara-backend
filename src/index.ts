@@ -111,13 +111,16 @@ app.get(
                 excludeExtraneousValues: true,
               });
               rows.forEach((row) => {
-                let buffer = plainToClass(TenagaKerjaEntity, {
-                  kerja: row.JobName,
-                  Jumlah: row.Jumlah,
-                });
-                tenagaKerjaRaw.push(buffer);
+                if (row.JobName !== null && row.Jumlah !== null) {
+                  let buffer = plainToClass(TenagaKerjaEntity, {
+                    kerja: row.JobName,
+                    Jumlah: row.Jumlah,
+                  });
+                  tenagaKerjaRaw.push(buffer);
+                }
               });
-              joinedRows.TenagaKerjas = tenagaKerjaRaw;
+              joinedRows.TenagaKerjas =
+                tenagaKerjaRaw.length > 0 ? tenagaKerjaRaw : null;
               res.status(h2Status.HTTP_STATUS_OK).json(joinedRows);
             } else {
               const kegiatans = plainToClass(KegiatanEntity, rows);
@@ -252,13 +255,16 @@ app.get(
         excludeExtraneousValues: true,
       });
       rows.forEach((row) => {
-        let buffer = plainToClass(TenagaKerjaEntity, {
-          kerja: row.JobName,
-          Jumlah: row.Jumlah,
-        });
-        tenagaKerjaRaw.push(buffer);
+        if (row.JobName !== null && row.Jumlah !== null) {
+          let buffer = plainToClass(TenagaKerjaEntity, {
+            kerja: row.JobName,
+            Jumlah: row.Jumlah,
+          });
+          tenagaKerjaRaw.push(buffer);
+        }
       });
-      joinedRows.TenagaKerjas = tenagaKerjaRaw;
+      joinedRows.TenagaKerjas =
+        tenagaKerjaRaw.length > 0 ? tenagaKerjaRaw : null;
       const filename = "test";
       const stream = res.writeHead(200, {
         "Content-Type": "application/pdf",

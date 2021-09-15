@@ -26,7 +26,7 @@ class KegiatanEntity {
   @Expose() Keterangan: string;
   @Type(() => TenagaKerjaEntity)
   @Expose()
-  TenagaKerjas: TenagaKerjaEntities;
+  TenagaKerjas: TenagaKerjaEntities | null;
 
   constructor(
     KegiatanId: number,

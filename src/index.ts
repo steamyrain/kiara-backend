@@ -285,14 +285,13 @@ app.get(
   wrap(async (_req: express.Request, res: express.Response) => {
     try {
       const conn = await pool.getConnection();
-      const rows = await conn.query("SELECT id, kerja FROM job where id <> 5"); // id 5 reserved for admin
+      const rows = await conn.query("SELECT kerja FROM job where id <> 5"); // id 5 reserved for admin
       conn.end();
       const tenagaKerjas: TenagaKerjaEntities = plainToClass(
         TenagaKerjaEntity,
         rows,
         { excludeExtraneousValues: true }
       );
-      console.log(tenagaKerjas);
       res.status(h2Status.HTTP_STATUS_OK).json(tenagaKerjas);
     } catch (error) {
       console.error(error);
